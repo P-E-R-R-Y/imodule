@@ -29,3 +29,19 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 #----------- dev -----------
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror)
+
+#----------- test -----------
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(GoogleTest REQUIRED)
+
+enable_testing()
+
+file(GLOB TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)
+
+add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+
+target_link_libraries(${PROJECT_NAME}_test gtest_main ${PROJECT_NAME})
+
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME}_test)
