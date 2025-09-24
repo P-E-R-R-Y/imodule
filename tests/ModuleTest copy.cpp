@@ -12,11 +12,11 @@ bool test(bool *b) {
 // Implémentation de test minimale
 class TestIModule : public IModule {
 public:
-    TestIModule(const std::string& name, const std::string& type)
-        : name_(name), type_(type) {}
+    TestIModule() {}
+    ~TestIModule() {}
 
-    const std::string& getType() const override { return type_; }
-    const std::string& getName() const override { return name_; }
+    const std::string getType() const override { return "TestType"; }
+    const std::string getName() const override { return "TestName"; }
     void update() override {
         bool value = true;
         test(&value);
@@ -29,9 +29,9 @@ private:
 };
 
 TEST(IModuleTest, InterfaceMethods) {
-    TestIModule mod("TestName", "TestType");
-    EXPECT_EQ(mod.getName(), "TestName");
+    TestIModule mod;
     EXPECT_EQ(mod.getType(), "TestType");
+    EXPECT_EQ(mod.getName(), "TestName");
     EXPECT_EQ(test(nullptr), false);
     mod.update();
     EXPECT_EQ(test(nullptr), true);

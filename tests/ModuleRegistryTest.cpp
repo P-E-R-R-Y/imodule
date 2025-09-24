@@ -7,8 +7,8 @@ public:
     DummyModule(std::string name, std::string type)
         : name_(std::move(name)), type_(std::move(type)) {}
 
-    const std::string& getType() const override { return type_; }
-    const std::string& getName() const override { return name_; }
+    const std::string getType() const override { return type_; }
+    const std::string getName() const override { return name_; }
     void update() override { };
 
     bool hasRegistry() const { return registry != nullptr; }
