@@ -1,90 +1,26 @@
-#pragma once
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <algorithm>
+/**
+ * @file IModule.hpp
+ * @author Perry Chouteau (perry.chouteau@outlook.com)
+ * @brief Le contrat par defaut : ce que tout module sait dire de lui-meme.
+ * @date 2026-08-04
+ */
 
-#include <stdexcept>
-#include <iostream>
-
-class ModuleRegistry;
-
-class IModule {
-public:
-    friend class ModuleRegistry;
-
-    virtual ~IModule() = default;
-
-    virtual const std::string getType() const = 0;
-    virtual const std::string getName() const = 0;
-    virtual void update() = 0;
-
-protected:
-    ModuleRegistry* registry = nullptr;
-};
+#ifndef IMODULE_HPP
+#define IMODULE_HPP
 
 /**
- * @brief Module Registry
- * 
- * ModuleRegistry
- * ├─ groups : std::unordered_map<std::string, ModuleGroup>
- * │   ├─ "GameModule" : ModuleGroup
- * │   │     ├─ position : 0          // index of active module
- * │   │     └─ modules : [Game1, Game2, Game3]
- * │   ├─ "GraphicModule" : ModuleGroup
- * │   │     ├─ position : 1
- * │   │     └─ modules : [Graphic1, Graphic2, Graphic3]
- * │   └─ ...
- * 
- */
-class ModuleRegistry {
+ * @interface IModule
+ * @brief Ce que tout module sait dire de lui-meme : ce qu'il EST, et QUI il est.
+*/
+class IModule {
+    public:
+        virtual ~IModule() = default;
 
-public:
+        /** @brief Le contrat rempli : "graphic", "audio", "game"... */
+        virtual const char *type() const = 0;
 
-   void add(IModule* m) {
-        if (!m) throw std::invalid_argument("Module null");
-
-        auto& entry = modules[m->getType()];
-        auto& vec = entry.second;
-
-        if (std::find(vec.begin(), vec.end(), m) != vec.end())
-            throw std::runtime_error("Module déjà présent: " + m->getName());
-
-        vec.push_back(m);
-        if (vec.size() == 1) entry.first = 0; // premier module = actif
-        m->registry = this;
-    }
-
-   // Retrieve active module by type
-    IModule* getActive(const std::string& type) const {
-        auto it = modules.find(type);
-        if (it == modules.end() || it->second.second.empty()) return nullptr;
-        size_t pos = std::min(it->second.first, static_cast<size_t>(it->second.second.size() - 1));
-        return it->second.second[pos];
-    }
-
-    // Retrieve modules by type
-    std::vector<IModule*> get(const std::string& type) const {
-        auto it = modules.find(type);
-        if (it == modules.end()) return {};
-        return it->second.second;
-    }
-
-    void setActive(const std::string& type, IModule* m) {
-        auto it = modules.find(type);
-        if (it == modules.end()) return; // type not found
-
-        auto& vec = it->second.second;
-        auto pos = std::find(vec.begin(), vec.end(), m);
-
-        if (pos == vec.end()) return; //module not in this group
-
-        it->second.first = static_cast<size_t>(std::distance(vec.begin(), pos));
-    }
-
-protected:
-
-    std::unordered_map<
-        std::string,
-        std::pair<size_t,std::vector<IModule *>>> modules;
+        /** @brief Le fournisseur : "ray", "sfml", "console"... */
+        virtual const char *name() const = 0;
 };
+
+#endif // IMODULE_HPP
