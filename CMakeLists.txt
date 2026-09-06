@@ -8,11 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ----------- project -----------
 
-# One pure interface, header-only : nothing to compile. Loading and managing
-# those modules lives in modulemanager - but the protocol IModule carries,
-# the use count and the condemned flag, is testable on its own and is where
-# the ordering bugs live.
+# Header-only : nothing to compile. IModuleManager charge des dll via
+# dlopen (SharedLibrary), d'ou le lien vers ${CMAKE_DL_LIBS}.
 add_library(${PROJECT_NAME} INTERFACE)
+
+target_link_libraries(${PROJECT_NAME} INTERFACE
+	${CMAKE_DL_LIBS}
+)
 
 # ----------- include -----------
 
@@ -27,12 +29,26 @@ find_package(GoogleTest REQUIRED)
 
 enable_testing()
 
+# Deux vrais vendors, charges au runtime par IModuleManagerTest.
+foreach(vendor ray sfml)
+	add_library(${PROJECT_NAME}_${vendor} MODULE examples/${vendor}.cpp)
+	target_link_libraries(${PROJECT_NAME}_${vendor} PRIVATE ${PROJECT_NAME})
+	target_include_directories(${PROJECT_NAME}_${vendor} PRIVATE examples)
+	set_target_properties(${PROJECT_NAME}_${vendor} PROPERTIES PREFIX "")
+endforeach()
+
 file(GLOB TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
 
 add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES})
+add_dependencies(${PROJECT_NAME}_tests ${PROJECT_NAME}_ray ${PROJECT_NAME}_sfml)
 
 target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/tests/includes
+)
+target_include_directories(${PROJECT_NAME}_tests PRIVATE examples)
+target_compile_definitions(${PROJECT_NAME}_tests PRIVATE
+	RAY_PATH="$<TARGET_FILE:${PROJECT_NAME}_ray>"
+	SFML_PATH="$<TARGET_FILE:${PROJECT_NAME}_sfml>"
 )
 
 target_link_libraries(${PROJECT_NAME}_tests

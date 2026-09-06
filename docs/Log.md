@@ -13,13 +13,24 @@ in the plan, no code written yet.
   (`igraphic`)
 - 🟢 13 tests against fake abstractions (`DummyModule`, `DummyRegistry`)
 
-## v0.2.0 — proposed, none of this is written
+## v0.2.0
 
-- 🟡 `claims()` on `IModule` — the resources a module claims on the
-  process, as opaque strings compared only by equality
-- 🟡 `acquire()`/`release()`/`uses()`/`condemned()` moved onto
-  `IModuleRegistry` — the table would stop taking the module's word for it
-- 🟡 `Select()` removed from the guest view — a guest could no longer
-  repoint the contract for everyone else
-- 🟡 `reset()` removed — it only existed because state lived inside a dll
-  that macOS often doesn't unmap
+The manager moves in, and the guest view goes away.
+
+- 🔴 `IModuleRegistry` removed. `IModuleManager` — until now in the
+  `modulemanager` repo — lives here instead, and is what `IModule::bind()`
+  hands over. `modulemanager` is retired.
+- 🔴 `Current()` / `Select()` removed. Nothing arbitrates for anyone: a
+  guest reads `GetAllByType()` and picks for itself.
+- 🔴 `GetAllByType()` / `GetAllByKey()` / `GetAll()` return a `Stride::Span`
+  instead of a `std::vector`. Empty cells come back as `nullptr` — that
+  vendor simply does not provide that contract.
+- 🟢 `claims()` on `IModule` — the resources it holds exclusively, as
+  opaque strings. `acquire()` refuses up front on a collision.
+- 🟢 `IModuleManager::add()` — a column with no library, for a module
+  compiled into the host. Takes a `unique_ptr`: the caller gives it up.
+- 🟢 `Stride<T>` — the table itself: one flat buffer, a row or a column
+  read in place as a start, a step and a length.
+- 🟢 `SharedLibrary` moved in from `modulemanager`.
+- ⚪ 44 tests, including a real `dlopen` claims collision between two
+  vendors.
